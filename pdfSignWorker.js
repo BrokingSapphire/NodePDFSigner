@@ -3,7 +3,13 @@ const { readFileSync, writeFileSync } = require('fs');
 const path = require('path');
 const { plainAddPlaceholder, SignPdf } = require('node-signpdf');
 
-const cert = readFileSync(path.resolve(__dirname, './certificate.p12'));
+let cert;
+try {
+  cert = readFileSync(path.resolve(__dirname, './certificate.p12'));
+} catch (error) {
+  console.error('Error: Certificate file not found. Please add certificate.p12 to the project root.');
+  process.exit(1);
+}
 
 try {
   console.log(`Signing file: ${workerData.file}`);
