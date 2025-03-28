@@ -20,9 +20,22 @@ async function addWatermark(pdfBuffer, signatureText) {
     for (const page of pages) {
       const { width, height } = page.getSize();
       
-      // Get current date and time in UTC
+      // Get current date and time in Indian Standard Time (IST)
       const now = new Date();
-      const utcDateString = now.toUTCString();
+      
+      // Convert to IST (UTC+5:30)
+      const istOptions = { 
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      };
+      
+      const istDateString = now.toLocaleString('en-IN', istOptions);
       
       // Calculate position for top left corner with some margin
       const topLeftX = 20; // Right margin from left edge
@@ -38,8 +51,8 @@ async function addWatermark(pdfBuffer, signatureText) {
         opacity: 0.8,
       });
       
-      // Add date and time in UTC
-      page.drawText(`Date: ${utcDateString} UTC`, {
+      // Add date and time in IST
+      page.drawText(`Date: ${istDateString} IST`, {
         x: topLeftX,
         y: topLeftY - 12, // Adjusted spacing for smaller text
         size: 8, // Reduced from 10
@@ -98,7 +111,7 @@ async function processPdf() {
 
     // Read certificate
     // The certificate password - change this to your actual certificate password
-    const certPassword = 'badssl.com'; 
+    const certPassword = 'your-certificate-password'; 
     const cert = fs.readFileSync(certPath);
 
     // Construct PDF input and output paths dynamically
