@@ -1,0 +1,15 @@
+{
+  "name": "pdfsigner",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node index.js"
+  },
+  "author": "Sapphire Broking",
+  "license": "ISC",
+  "description": "Automates bulk PDF signing with parallel processing using Node.js Worker Threads and the node-signpdf library for efficient large-scale document handling.",
+  "dependencies": {
+    "node-signpdf": "^3.0.0"
+  }
+}

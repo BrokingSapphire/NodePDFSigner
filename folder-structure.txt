@@ -1,0 +1,13 @@
+project-root/
+│
+├── input-pdfs/             # Directory to store input PDF files (to be signed)
+├── output-pdfs/            # Directory to store signed PDF files
+├── workers/
+│   ├── bulkSignWorker.js   # Main file managing Worker Threads and PDF signing tasks
+│   └── pdfSignWorker.js    # Worker file containing the PDF signing logic
+│
+├── node_modules/           # Dependencies (ignored by Git)
+├── .gitignore              # Ignore unnecessary files (e.g., node_modules, logs)
+├── package.json            # Project dependencies and scripts  
+├── README.md               # Instructions for setup and usage
+└── certificate.p12         # Digital certificate file for signing PDFs (not tracked by Git)
