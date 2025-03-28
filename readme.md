@@ -9,8 +9,10 @@ This project uses Node.js Worker Threads and `node-signpdf` to sign PDFs in bulk
 
 3. Place PDF files in the `input-pdfs` folder and the replace `certificate.p12` certificate in the project root.
 
-4. Delete `example.txt` file from `input-pdfs` and `output-pdfs` folder.
+4. Replace the certificate passwords from `pdfSignWorker.js` file.
 
-5. Run the `index.js`
+5. Delete `example.txt` file from `input-pdfs` and `output-pdfs` folder.
 
-6. Signed PDFs will be saved in the `output-pdfs` folder.
+6. Run the `index.js`
+
+7. Signed PDFs will be saved in the `output-pdfs` folder.
