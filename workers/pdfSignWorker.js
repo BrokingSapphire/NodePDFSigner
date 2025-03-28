@@ -111,7 +111,7 @@ async function processPdf() {
 
     // Read certificate
     // The certificate password - change this to your actual certificate password
-    const certPassword = 'your-certificate-password'; 
+    const certPassword = 'badssl.com'; 
     const cert = fs.readFileSync(certPath);
 
     // Construct PDF input and output paths dynamically
