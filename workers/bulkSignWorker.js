@@ -4,8 +4,12 @@ const path = require('path');
 
 function runWorker(file) {
   return new Promise((resolve, reject) => {
-    const worker = new Worker(path.resolve(__dirname, './pdfSignWorker.js'), {
-      workerData: { file, inputDir: './input-pdfs', outputDir: './output-pdfs' },
+    const workerFilePath = path.join(__dirname, 'pdfSignWorker.js'); // Updated path
+    const inputDir = path.join(__dirname, '../input-pdfs'); // Correct relative path to input-pdfs
+    const outputDir = path.join(__dirname, '../output-pdfs'); // Correct relative path to output-pdfs
+
+    const worker = new Worker(workerFilePath, {
+      workerData: { file, inputDir, outputDir },
     });
 
     worker.on('message', resolve);
@@ -17,8 +21,11 @@ function runWorker(file) {
 }
 
 async function bulkSignPDFs() {
-  const pdfFiles = fs.readdirSync('./input-pdfs').filter(file => file.endsWith('.pdf'));
-  const concurrencyLimit = 8;  // Process 8 PDFs concurrently
+  const inputDir = path.join(__dirname, '../input-pdfs'); // Updated input path
+  const pdfFiles = fs.readdirSync(inputDir).filter(file => file.endsWith('.pdf'));
+  const concurrencyLimit = 8; // Process 8 PDFs concurrently
+
+  console.log(`Starting bulk PDF signing process. Found ${pdfFiles.length} PDFs to sign...`);
 
   for (let i = 0; i < pdfFiles.length; i += concurrencyLimit) {
     const batch = pdfFiles.slice(i, i + concurrencyLimit);
@@ -26,4 +33,6 @@ async function bulkSignPDFs() {
   }
 }
 
-bulkSignPDFs().then(() => console.log("All PDFs processed!")).catch(console.error);
+bulkSignPDFs()
+  .then(() => console.log("All PDFs processed!"))
+  .catch(console.error);
