@@ -1,12 +1,28 @@
-const { Worker } = require('worker_threads');
+// workers/bulkSignWorker.js
+const { Worker, parentPort } = require('worker_threads');
 const fs = require('fs');
 const path = require('path');
 
+// Get absolute paths to directories
+const rootDir = path.resolve(__dirname, '..');
+const inputDir = path.join(rootDir, 'input-pdfs');
+const outputDir = path.join(rootDir, 'output-pdfs');
+
 function runWorker(file) {
   return new Promise((resolve, reject) => {
-    const workerFilePath = path.join(__dirname, 'pdfSignWorker.js'); // Updated path
-    const inputDir = path.join(__dirname, '../input-pdfs'); // Correct relative path to input-pdfs
-    const outputDir = path.join(__dirname, '../output-pdfs'); // Correct relative path to output-pdfs
+    const workerFilePath = path.join(__dirname, 'pdfSignWorker.js');
+
+    // Log file paths for debugging
+    console.log(`Processing file: ${file}`);
+    console.log(`Input path: ${path.join(inputDir, file)}`);
+    console.log(`Output path: ${path.join(outputDir, `signed_${file}`)}`);
+    
+    // Verify the input file exists
+    if (!fs.existsSync(path.join(inputDir, file))) {
+      console.error(`Input file not found: ${path.join(inputDir, file)}`);
+      reject(new Error(`Input file not found: ${file}`));
+      return;
+    }
 
     const worker = new Worker(workerFilePath, {
       workerData: { file, inputDir, outputDir },
@@ -21,18 +37,61 @@ function runWorker(file) {
 }
 
 async function bulkSignPDFs() {
-  const inputDir = path.join(__dirname, '../input-pdfs'); // Updated input path
-  const pdfFiles = fs.readdirSync(inputDir).filter(file => file.endsWith('.pdf'));
-  const concurrencyLimit = 8; // Process 8 PDFs concurrently
+  // Verify directories exist
+  if (!fs.existsSync(inputDir)) {
+    parentPort.postMessage(`Input directory not found: ${inputDir}`);
+    return;
+  }
+  
+  if (!fs.existsSync(outputDir)) {
+    // Create output directory if it doesn't exist
+    try {
+      fs.mkdirSync(outputDir, { recursive: true });
+      parentPort.postMessage(`Created output directory: ${outputDir}`);
+    } catch (error) {
+      parentPort.postMessage(`Failed to create output directory: ${error.message}`);
+      return;
+    }
+  }
 
-  console.log(`Starting bulk PDF signing process. Found ${pdfFiles.length} PDFs to sign...`);
+  // Get PDF files from input directory
+  const pdfFiles = fs.readdirSync(inputDir).filter(file => file.endsWith('.pdf'));
+  
+  if (pdfFiles.length === 0) {
+    parentPort.postMessage(`No PDF files found in ${inputDir}`);
+    return;
+  }
+
+  parentPort.postMessage(`Starting bulk PDF signing process. Found ${pdfFiles.length} PDFs to sign...`);
+
+  const concurrencyLimit = 8; // Process 8 PDFs concurrently
+  let processedCount = 0;
+  let errorCount = 0;
 
   for (let i = 0; i < pdfFiles.length; i += concurrencyLimit) {
     const batch = pdfFiles.slice(i, i + concurrencyLimit);
-    await Promise.all(batch.map(file => runWorker(file)));
+    
+    try {
+      const results = await Promise.allSettled(batch.map(file => runWorker(file)));
+      
+      results.forEach(result => {
+        if (result.status === 'fulfilled') {
+          processedCount++;
+          parentPort.postMessage(result.value);
+        } else {
+          errorCount++;
+          parentPort.postMessage(`Error: ${result.reason}`);
+        }
+      });
+    } catch (error) {
+      parentPort.postMessage(`Batch processing error: ${error.message}`);
+    }
   }
+
+  parentPort.postMessage(`PDF processing complete. Successful: ${processedCount}, Failed: ${errorCount}`);
 }
 
-bulkSignPDFs()
-  .then(() => console.log("All PDFs processed!"))
-  .catch(console.error);
+// Start the bulk signing process
+bulkSignPDFs().catch(error => {
+  parentPort.postMessage(`Fatal error in bulkSignPDFs: ${error.message}`);
+});
